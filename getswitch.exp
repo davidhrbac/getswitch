@@ -1,0 +1,46 @@
+#!/usr/bin/expect -f
+#
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+			  ;# script wasn't run conservatively originally
+if {$force_conservative} {
+	set send_slow {1 .1}
+	proc send {ignore arg} {
+		sleep .1
+		exp_send -s -- $arg
+	}
+}
+
+## ---------------- configuration ---------------- #
+source getswitch.conf
+## ---------------- configuration ---------------- #
+
+set timeout $timeout 
+spawn telnet $device
+match_max 100000
+#expect -exact "username:"
+expect { 
+	default {exit 2}
+	-nocase "username:"
+	}
+send -- "$user\r"
+#expect -exact "$user\r"
+expect -nocase "\rpassword:"
+send "$pass\r"
+expect {
+	-re ":admin#|:4#" { send "upload cfg_toTFTP $tftp $config/$device"
+		expect -exact "upload cfg_toTFTP $tftp $config/$device"
+		send -- "\r"
+		}
+	"#" { send "upload configuration $tftp $config/$device"
+		send -- "\r"
+		expect -exact "The copy operation was completed successfully"
+		}
+	}
+expect { 
+	timeout {exit 2}
+	"Done. \r"
+	}
+expect -exact "Done. \r"
+expect -re ":admin#|:4#"
+send -- "logout\r"
+expect eof

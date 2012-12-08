@@ -1,0 +1,8 @@
+# ---------------- configuration ---------------- #
+#set device 192.168.10.251
+set device [lindex $argv 0] 
+set tftp 192.168.10.2
+set user root
+set pass rootpassword
+set config sw
+set timeout 5
